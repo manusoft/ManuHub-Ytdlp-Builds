@@ -1,0 +1,318 @@
+name: Update ManuHub.FFmpeg & ManuHub.FFprobe
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"   # Daily at 3:00 UTC
+
+jobs:
+  # ────────────────────────────────────────────────
+  # FFmpeg
+  # ────────────────────────────────────────────────
+  update-ffmpeg:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download latest FFmpeg build zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path tools
+          $url = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+          Write-Output "Downloading: $url"
+          Invoke-WebRequest -Uri $url -OutFile "ffmpeg.zip" -UseBasicParsing
+
+      - name: Extract ffmpeg.exe
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "ffmpeg.zip" -DestinationPath "temp-ffmpeg" -Force
+          $binPath = Get-ChildItem -Path "temp-ffmpeg" -Recurse -Directory -Filter "bin" | Select-Object -First 1 -ExpandProperty FullName
+          if (-Not $binPath) { Write-Error "No 'bin' folder found"; exit 1 }
+          Copy-Item "$binPath/ffmpeg.exe" "tools/ffmpeg.exe" -Force
+          if (-Not (Test-Path "tools/ffmpeg.exe")) { Write-Error "ffmpeg.exe not copied"; exit 1 }
+          Remove-Item "temp-ffmpeg" -Recurse -Force
+          Remove-Item "ffmpeg.zip" -Force
+
+      - name: Get build date from release info
+        id: get-date
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest" -Headers @{ "User-Agent" = "GitHub-Actions" }
+          $title = $release.name
+          if ($title -match '\((\d{4})-(\d{2})-(\d{2})') {
+            $year = [int]$Matches[1]
+            $month = [int]$Matches[2]
+            $day = [int]$Matches[3]
+            $major = $year - 2020
+            $version = "$major.$month.$day"
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+            Write-Output "Parsed version: $version from title '$title'"
+          } else {
+            Write-Error "Could not parse build date from release title: $title"
+            exit 1
+          }
+
+      - name: Update FFmpeg .csproj version
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get-date.outputs.version }}"
+          $csproj = "src/ManuHub.FFmpeg/ManuHub.FFmpeg.csproj"
+          if (-Not (Test-Path $csproj)) { Write-Error "$csproj not found"; exit 1 }
+          $content = Get-Content $csproj -Raw
+          $updated = $content -replace '(?<=<Version>)[^<]+(?=</Version>)', $version
+          Set-Content $csproj $updated -NoNewline
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Verify binaries exist before pack
+        shell: pwsh
+        run: |
+          Get-ChildItem tools -ErrorAction SilentlyContinue | Format-Table FullName, @{Name='SizeMB';Expression={[math]::Round($_.Length / 1MB, 2)}}
+          if (-Not (Test-Path tools/ffmpeg.exe)) { Write-Error "ffmpeg.exe MISSING!"; exit 1 }
+
+      - name: Generate FFmpeg .nuspec
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get-date.outputs.version }}"
+          $projectDir = "src/ManuHub.FFmpeg"
+          $nuspecPath = "$projectDir/ffmpeg.nuspec"
+          $nuspec = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2016/06/nuspec.xsd">
+            <metadata>
+              <id>ManuHub.FFmpeg</id>
+              <version>$version</version>
+              <authors>Manojbabu</authors>
+              <company>ManuHub</company>
+              <description>Provides the latest stable ffmpeg.exe Windows binary as a NuGet package.</description>
+              <projectUrl>https://ffmpeg.org</projectUrl>
+              <repository type="git" url="https://github.com/manusoft/ManuHub-Ytdlp-Builds" />
+              <tags>ffmpeg;ffmpeg.exe;ytdlp;yt-dlp;binary;tools</tags>
+              <copyright>Copyright © $([System.DateTime]::Now.Year) ManuHub</copyright>
+              <requireLicenseAcceptance>true</requireLicenseAcceptance>
+              <license type="file">LICENSE.txt</license>
+              <icon>icon.png</icon>
+              <readme>README.md</readme>
+              <contentFiles>
+                <files include="any/netstandard2.1/tools/ffmpeg.exe"
+                     buildAction="None"
+                     copyToOutput="true"
+                     flatten="false" />
+              </contentFiles>      
+              <dependencies>
+                <group targetFramework=".NETStandard2.1" />
+              </dependencies>
+            </metadata>
+            <files>
+              <file src="icon.png" target="" />
+              <file src="README.md" target="" />
+              <file src="LICENSE.txt" target="" />
+              <file src="THIRD-PARTY-NOTICES.txt" target="" />
+              <file src="../../tools/ffmpeg.exe" target="contentFiles/any/netstandard2.1/tools/ffmpeg.exe" />
+            </files>
+          </package>
+          "@
+          $nuspec | Out-File -FilePath $nuspecPath -Encoding utf8NoBOM
+          Write-Output "Generated $nuspecPath with version $version"
+
+      - name: Pack FFmpeg package using .nuspec
+        shell: pwsh
+        run: |
+          dotnet restore "src/ManuHub.FFmpeg/ManuHub.FFmpeg.csproj"
+          Set-Location src/ManuHub.FFmpeg
+          dotnet pack ManuHub.FFmpeg.csproj -c Release `
+            -p:NuspecFile=ffmpeg.nuspec `
+            --no-build
+          Set-Location ../../..
+
+      - name: Check .nupkg size before push (debug)
+        shell: pwsh
+        run: |
+          $nupkgPath = Get-ChildItem "src/ManuHub.FFmpeg/bin/Release" -Filter "*.nupkg" `
+            | Select-Object -First 1 -ExpandProperty FullName
+          if ($nupkgPath) {
+            $sizeBytes = (Get-Item $nupkgPath).Length
+            $sizeMB = [math]::Round($sizeBytes / 1MB, 2)
+            Write-Output "Package path: $nupkgPath"
+            Write-Output "Package size: $sizeMB MB ($sizeBytes bytes)"
+            if ($sizeMB -lt 50) {
+              Write-Warning "WARNING: Package is suspiciously small (<50 MB) — binaries likely missing!"
+            } else {
+              Write-Output "Size looks correct (large binary included)."
+            }
+          } else {
+            Write-Error "No .nupkg found after pack — cannot check size"
+            exit 1
+          }
+
+      - name: Push FFmpeg package
+        shell: pwsh
+        run: |
+          $nupkg = Get-ChildItem "src/ManuHub.FFmpeg/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
+          if ($nupkg) {
+            dotnet nuget push "$nupkg" `
+              --api-key "${{ secrets.NUGET_KEY }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } else {
+            Write-Output "No FFmpeg .nupkg found – skipping"
+          }
+
+  # ────────────────────────────────────────────────
+  # FFprobe 
+  # ────────────────────────────────────────────────
+  update-ffprobe:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download latest FFmpeg build zip (for ffprobe)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path tools
+          $url = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+          Invoke-WebRequest -Uri $url -OutFile "ffmpeg.zip" -UseBasicParsing
+
+      - name: Extract ffprobe.exe
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "ffmpeg.zip" -DestinationPath "temp-ffmpeg" -Force
+          $binPath = Get-ChildItem -Path "temp-ffmpeg" -Recurse -Directory -Filter "bin" | Select-Object -First 1 -ExpandProperty FullName
+          if (-Not $binPath) { Write-Error "No 'bin' folder found"; exit 1 }
+          Copy-Item "$binPath/ffprobe.exe" "tools/ffprobe.exe" -Force
+          if (-Not (Test-Path "tools/ffprobe.exe")) { Write-Error "ffprobe.exe not copied"; exit 1 }
+          Remove-Item "temp-ffmpeg" -Recurse -Force
+          Remove-Item "ffmpeg.zip" -Force
+
+      - name: Get build date from release info
+        id: get-date
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/yt-dlp/FFmpeg-Builds/releases/latest" -Headers @{ "User-Agent" = "GitHub-Actions" }
+          $title = $release.name
+          if ($title -match '\((\d{4})-(\d{2})-(\d{2})') {
+            $year = [int]$Matches[1]
+            $month = [int]$Matches[2]
+            $day = [int]$Matches[3]
+            $major = $year - 2020
+            $version = "$major.$month.$day"
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Error "Could not parse build date: $title"
+            exit 1
+          }
+
+      - name: Update FFprobe .csproj version
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get-date.outputs.version }}"
+          $csproj = "src/ManuHub.FFprobe/ManuHub.FFprobe.csproj"
+          if (-Not (Test-Path $csproj)) { Write-Error "$csproj not found"; exit 1 }
+          $content = Get-Content $csproj -Raw
+          $updated = $content -replace '(?<=<Version>)[^<]+(?=</Version>)', $version
+          Set-Content $csproj $updated -NoNewline
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Verify binaries exist before pack
+        shell: pwsh
+        run: |
+          Get-ChildItem tools -ErrorAction SilentlyContinue | Format-Table FullName, @{Name='SizeMB';Expression={[math]::Round($_.Length / 1MB, 2)}}
+          if (-Not (Test-Path tools/ffprobe.exe)) { Write-Error "ffprobe.exe MISSING!"; exit 1 }
+
+      - name: Generate FFprobe .nuspec
+        shell: pwsh
+        run: |
+          $version = "${{ steps.get-date.outputs.version }}"
+          $projectDir = "src/ManuHub.FFprobe"
+          $nuspecPath = "$projectDir/ffprobe.nuspec"
+          $nuspec = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2016/06/nuspec.xsd">
+            <metadata>
+              <id>ManuHub.FFprobe</id>
+              <version>$version</version>
+              <authors>Manojbabu</authors>
+              <company>ManuHub</company>
+              <description>Provides the latest stable ffprobe.exe Windows binary as a NuGet package.</description>
+              <projectUrl>https://ffmpeg.org</projectUrl>
+              <repository type="git" url="https://github.com/manusoft/ManuHub-Ytdlp-Builds" />
+              <tags>ffprobe;ffprobe.exe;ytdlp;yt-dlp;binary;tools</tags>
+              <copyright>Copyright © $([System.DateTime]::Now.Year) ManuHub</copyright>
+              <requireLicenseAcceptance>true</requireLicenseAcceptance>
+              <license type="file">LICENSE.txt</license>
+              <icon>icon.png</icon>
+              <readme>README.md</readme>
+              <contentFiles>
+                <files include="any/netstandard2.1/tools/ffprobe.exe"
+                     buildAction="None"
+                     copyToOutput="true"
+                     flatten="false" />
+              </contentFiles>   
+              <dependencies>
+                <group targetFramework=".NETStandard2.1" />
+              </dependencies>
+            </metadata>
+            <files>
+              <file src="icon.png" target="" />
+              <file src="README.md" target="" />
+              <file src="LICENSE.txt" target="" />
+              <file src="THIRD-PARTY-NOTICES.txt" target="" />
+              <file src="../../tools/ffprobe.exe" target="contentFiles/any/netstandard2.1/tools/ffprobe.exe" />
+            </files>
+          </package>
+          "@
+          $nuspec | Out-File -FilePath $nuspecPath -Encoding utf8NoBOM
+          Write-Output "Generated $nuspecPath with version $version"
+
+      - name: Pack FFprobe package using .nuspec
+        shell: pwsh
+        run: |
+          dotnet restore "src/ManuHub.FFprobe/ManuHub.FFprobe.csproj"
+          Set-Location src/ManuHub.FFprobe
+          dotnet pack ManuHub.FFprobe.csproj -c Release `
+            -p:NuspecFile=ffprobe.nuspec `
+            --no-build
+          Set-Location ../../..
+
+      - name: Check .nupkg size before push (debug)
+        shell: pwsh
+        run: |
+          $nupkgPath = Get-ChildItem "src/ManuHub.FFprobe/bin/Release" -Filter "*.nupkg" `
+            | Select-Object -First 1 -ExpandProperty FullName
+          if ($nupkgPath) {
+            $sizeBytes = (Get-Item $nupkgPath).Length
+            $sizeMB = [math]::Round($sizeBytes / 1MB, 2)
+            Write-Output "Package path: $nupkgPath"
+            Write-Output "Package size: $sizeMB MB ($sizeBytes bytes)"
+            if ($sizeMB -lt 50) {
+              Write-Warning "WARNING: Package is suspiciously small (<50 MB) — binaries likely missing!"
+            } else {
+              Write-Output "Size looks correct (large binary included)."
+            }
+          } else {
+            Write-Error "No .nupkg found after pack — cannot check size"
+            exit 1
+          }
+
+      - name: Push FFprobe package
+        shell: pwsh
+        run: |
+          $nupkg = Get-ChildItem "src/ManuHub.FFprobe/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
+          if ($nupkg) {
+            dotnet nuget push "$nupkg" `
+              --api-key "${{ secrets.NUGET_KEY }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } else {
+            Write-Output "No FFprobe .nupkg found – skipping"
+          }

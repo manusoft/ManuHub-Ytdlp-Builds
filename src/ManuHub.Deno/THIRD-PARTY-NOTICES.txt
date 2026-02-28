@@ -1,0 +1,14 @@
+This NuGet package redistributes unmodified third-party binaries.
+
+---
+
+FFmpeg
+Copyright 2018-2026 the Deno authors
+Website: https://deno.com
+
+Deno is licensed under the MIT License, depending on build configuration.
+
+This package redistributes Deno binaries without modification.
+No ownership or affiliation with the Deno project is implied.
+
+

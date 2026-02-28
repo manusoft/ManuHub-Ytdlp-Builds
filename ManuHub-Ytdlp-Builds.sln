@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManuHub.Ytdlp", "src\ManuHub.Ytdlp\ManuHub.Ytdlp.csproj", "{F40476AC-E502-4A5B-995B-915571FAE81A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManuHub.FFmpeg", "src\ManuHub.FFmpeg\ManuHub.FFmpeg.csproj", "{0BB4EE0C-02FD-4687-BD0F-FEEFD2BC8040}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManuHub.FFprobe", "src\ManuHub.FFprobe\ManuHub.FFprobe.csproj", "{196813C7-8441-444E-907D-24653068140E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManuHub.Deno", "src\ManuHub.Deno\ManuHub.Deno.csproj", "{5892BAC7-FEB7-551D-367A-F8B57605EFBD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "archived", "archived", "{8943A601-5041-410A-98B1-25AE9D9C4EEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ytdlp.executable", "archived\ytdlp.executable\ytdlp.executable.csproj", "{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F40476AC-E502-4A5B-995B-915571FAE81A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F40476AC-E502-4A5B-995B-915571FAE81A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F40476AC-E502-4A5B-995B-915571FAE81A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F40476AC-E502-4A5B-995B-915571FAE81A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BB4EE0C-02FD-4687-BD0F-FEEFD2BC8040}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BB4EE0C-02FD-4687-BD0F-FEEFD2BC8040}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BB4EE0C-02FD-4687-BD0F-FEEFD2BC8040}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BB4EE0C-02FD-4687-BD0F-FEEFD2BC8040}.Release|Any CPU.Build.0 = Release|Any CPU
+		{196813C7-8441-444E-907D-24653068140E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{196813C7-8441-444E-907D-24653068140E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{196813C7-8441-444E-907D-24653068140E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{196813C7-8441-444E-907D-24653068140E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5892BAC7-FEB7-551D-367A-F8B57605EFBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5892BAC7-FEB7-551D-367A-F8B57605EFBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5892BAC7-FEB7-551D-367A-F8B57605EFBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5892BAC7-FEB7-551D-367A-F8B57605EFBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F40476AC-E502-4A5B-995B-915571FAE81A} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
+		{0BB4EE0C-02FD-4687-BD0F-FEEFD2BC8040} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
+		{196813C7-8441-444E-907D-24653068140E} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
+		{5892BAC7-FEB7-551D-367A-F8B57605EFBD} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
+		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B} = {8943A601-5041-410A-98B1-25AE9D9C4EEA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {58F19A27-7100-4EB0-A155-0F682A2A03B5}
+	EndGlobalSection
+EndGlobal

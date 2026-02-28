@@ -1,0 +1,21 @@
+This NuGet package redistributes unmodified third-party binaries.
+
+---
+
+FFmpeg
+Copyright © FFmpeg developers
+Website: https://ffmpeg.org
+
+FFmpeg is licensed under the GNU Lesser General Public License (LGPL) 2.1
+or the GNU General Public License (GPL), depending on build configuration.
+
+This package redistributes FFmpeg binaries without modification.
+No ownership or affiliation with the FFmpeg project is implied.
+
+---
+
+FFprobe
+Copyright © FFmpeg developers
+Website: https://ffmpeg.org
+
+FFprobe is part of the FFmpeg project and follows the same licensing terms.

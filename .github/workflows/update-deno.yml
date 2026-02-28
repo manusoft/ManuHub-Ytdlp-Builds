@@ -1,0 +1,164 @@
+name: Update ManuHub.Deno
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"   # Daily at 3:00 UTC
+
+jobs:
+  update-deno:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest Deno release tag
+        id: get-tag
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/denoland/deno/releases/latest" -Headers @{ "User-Agent" = "GitHub-Actions" }
+          $tag = $release.tag_name
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Download latest Deno Windows zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path tools
+          $tag = "${{ steps.get-tag.outputs.tag }}"
+          $url = "https://github.com/denoland/deno/releases/download/$tag/deno-x86_64-pc-windows-msvc.zip"
+          Write-Output "Downloading from: $url"
+          Invoke-WebRequest -Uri $url -OutFile "deno.zip" -UseBasicParsing
+
+      - name: Extract deno.exe
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "deno.zip" -DestinationPath "tools" -Force
+          # Verify extraction
+          if (-Not (Test-Path "tools/deno.exe")) {
+            Write-Error "deno.exe not found after extraction"
+            exit 1
+          }
+          Remove-Item "deno.zip" -Force  # Cleanup
+
+      - name: Set version from tag
+        id: set-version
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.get-tag.outputs.tag }}"
+          $version = $tag.TrimStart('v')   # v2.6.10 → 2.6.10
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Update .csproj version
+        shell: pwsh
+        run: |
+          $version = "${{ steps.set-version.outputs.version }}"
+          $csprojPath = "src/ManuHub.Deno/ManuHub.Deno.csproj"
+          
+          if (-Not (Test-Path $csprojPath)) {
+            Write-Error "csproj not found at $csprojPath"
+            exit 1
+          }
+          
+          $content = Get-Content $csprojPath -Raw
+          $updated = $content -replace '(?<=<Version>)[^<]+(?=</Version>)', $version
+          Set-Content $csprojPath $updated -NoNewline
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x   # Adjust if your project needs 10.0 preview
+
+      - name: Verify binaries exist before pack
+        shell: pwsh
+        run: |
+          Get-ChildItem tools -ErrorAction SilentlyContinue | Format-Table FullName, @{Name='SizeMB';Expression={[math]::Round($_.Length / 1MB, 2)}}
+          if (-Not (Test-Path tools/deno.exe)) { Write-Error "deno.exe MISSING!"; exit 1 }
+
+      - name: Generate Deno .nuspec
+        shell: pwsh
+        run: |
+          $version = "${{ steps.set-version.outputs.version }}".TrimStart('v')
+          $projectDir = "src/ManuHub.Deno"
+          $nuspecPath = "$projectDir/deno.nuspec"
+          $nuspec = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2016/06/nuspec.xsd">
+            <metadata>
+              <id>ManuHub.Deno</id>
+              <version>$version</version>
+              <authors>Manojbabu</authors>
+              <company>ManuHub</company>
+              <description>Provides the latest stable deno.exe Windows binary as a NuGet package.</description>
+              <projectUrl>https://deno.com</projectUrl>
+              <repository type="git" url="https://github.com/manusoft/ManuHub-Ytdlp-Builds" />
+              <tags>deno;deno.exe;runtime;javascript;typescript</tags>
+              <copyright>Copyright © $([System.DateTime]::Now.Year) ManuHub</copyright>
+              <requireLicenseAcceptance>true</requireLicenseAcceptance>
+              <license type="file">LICENSE.txt</license>
+              <icon>icon.png</icon>
+              <readme>README.md</readme>
+              <contentFiles>
+                <files include="any/netstandard2.1/tools/deno.exe"
+                     buildAction="None"
+                     copyToOutput="true"
+                     flatten="false" />
+              </contentFiles>      
+              <dependencies>
+                <group targetFramework=".NETStandard2.1" />
+              </dependencies>
+            </metadata>
+            <files>
+              <file src="icon.png" target="" />
+              <file src="README.md" target="" />
+              <file src="LICENSE.txt" target="" />
+              <file src="THIRD-PARTY-NOTICES.txt" target="" />
+              <file src="../../tools/deno.exe" target="contentFiles/any/netstandard2.1/tools/deno.exe" />
+            </files>
+          </package>
+          "@
+          $nuspec | Out-File -FilePath $nuspecPath -Encoding utf8NoBOM
+          Write-Output "Generated $nuspecPath with version $version"
+
+      - name: Pack Deno package using .nuspec
+        shell: pwsh
+        run: |
+          dotnet restore "src/ManuHub.Deno/ManuHub.Deno.csproj"
+          Set-Location src/ManuHub.Deno
+          dotnet pack ManuHub.Deno.csproj -c Release `
+            -p:NuspecFile=deno.nuspec `
+            --no-build
+          Set-Location ../../..
+
+      - name: Check .nupkg size before push (debug)
+        shell: pwsh
+        run: |
+          $nupkgPath = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" `
+            | Select-Object -First 1 -ExpandProperty FullName
+          if ($nupkgPath) {
+            $sizeBytes = (Get-Item $nupkgPath).Length
+            $sizeMB = [math]::Round($sizeBytes / 1MB, 2)
+            Write-Output "Package path: $nupkgPath"
+            Write-Output "Package size: $sizeMB MB ($sizeBytes bytes)"
+            if ($sizeMB -lt 10) {
+              Write-Warning "WARNING: Package is suspiciously small (<10 MB) — binary likely missing!"
+            } else {
+              Write-Output "Size looks correct."
+            }
+          } else {
+            Write-Error "No .nupkg found after pack"
+            exit 1
+          }
+          
+      - name: Push Deno package
+        shell: pwsh
+        run: |
+          $nupkg = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
+          if ($nupkg) {
+            dotnet nuget push "$nupkg" `
+              --api-key "${{ secrets.NUGET_KEY }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+          } else {
+            Write-Output "No .nupkg found – skipping"
+          }

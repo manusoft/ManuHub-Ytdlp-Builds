@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<LangVersion>latest</LangVersion>
+
+	<!-- Metadata -->
+	<AssemblyName>ManuHub.Ytdlp</AssemblyName>
+	<RootNamespace>ManuHub.Ytdlp</RootNamespace>
+	<PackageId>ManuHub.Ytdlp</PackageId>
+	  
+	<Description>Provides the latest stable yt-dlp.exe Windows binary as a NuGet package. Copies yt-dlp.exe to the output folder for easy use in .NET applications and wrappers.</Description>	
+	<Authors>Manojbabu</Authors>
+	<Company>ManuHub</Company>	  
+	<Copyright>Copyright © $([System.DateTime]::Now.Year) ManuHub</Copyright>
+	  
+	<PackageTags>yt-dlp;yt-dlp.exe;ytdlp;ytdlp.exe;youtube-dl;downloader;video;audio;stable</PackageTags>
+	  
+	<ProjectUrl>https://github.com/yt-dlp/yt-dlp</ProjectUrl>
+	<RepositoryUrl>https://github.com/manusoft/ManuHub-Ytdlp-Builds</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>	  
+	  
+	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	<PackageIcon>icon.png</PackageIcon>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+
+	<!-- Version is auto-updated by GitHub Actions workflow -->
+	<Version>6.2.21</Version>
+	  
+	<!-- Binary-only / content-only package -->
+	<IsPackable>true</IsPackable>
+	<IncludeBuildOutput>false</IncludeBuildOutput>
+	<IncludeContentInPack>true</IncludeContentInPack>	  
+	  
+    <!-- Optional: no license prompt for consumers -->	  
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	  
+	<!-- Suppress only the specific warning we expect -->
+	<NoWarn>$(NoWarn);NU5100;NU5119;NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<None Include="icon.png" Pack="true" PackagePath="" />
+	<None Include="README.md" Pack="true" PackagePath="" />
+	<None Include="LICENSE.txt" Pack="true" PackagePath="" />
+	<None Include="THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>
