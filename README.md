@@ -18,6 +18,8 @@
 ![NuGet Version](https://img.shields.io/nuget/v/ytdlp-executable)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/ytdlp-executable)
 
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=manusoft/ManuHub-Ytdlp-Builds)
+
 ---
 
 # ManuHub-Ytdlp-Builds
