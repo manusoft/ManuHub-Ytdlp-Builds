@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "archived", "archived", "{89
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ytdlp.executable", "archived\ytdlp.executable\ytdlp.executable.csproj", "{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManuHub.FFplay", "src\ManuHub.FFplay\ManuHub.FFplay.csproj", "{1641C40C-EE07-E175-5FFD-2EECE6E43B00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1641C40C-EE07-E175-5FFD-2EECE6E43B00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1641C40C-EE07-E175-5FFD-2EECE6E43B00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1641C40C-EE07-E175-5FFD-2EECE6E43B00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1641C40C-EE07-E175-5FFD-2EECE6E43B00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{196813C7-8441-444E-907D-24653068140E} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
 		{5892BAC7-FEB7-551D-367A-F8B57605EFBD} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
 		{EAADCDC8-CCB1-FAB0-539C-44B97A2BF27B} = {8943A601-5041-410A-98B1-25AE9D9C4EEA}
+		{1641C40C-EE07-E175-5FFD-2EECE6E43B00} = {AE4C7F66-D2A4-480D-842A-854BB1CA1EE9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {58F19A27-7100-4EB0-A155-0F682A2A03B5}

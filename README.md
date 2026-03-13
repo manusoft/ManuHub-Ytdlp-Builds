@@ -10,6 +10,10 @@
 ![NuGet Version](https://img.shields.io/nuget/v/ManuHub.FFprobe)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/ManuHub.FFprobe)
 
+![Static Badge](https://img.shields.io/badge/ManuHub.FFplay-purple)
+![NuGet Version](https://img.shields.io/nuget/v/ManuHub.FFplay)
+![NuGet Downloads](https://img.shields.io/nuget/dt/ManuHub.FFplay)
+
 ![Static Badge](https://img.shields.io/badge/ManuHub.Deno-orange)
 ![NuGet Version](https://img.shields.io/nuget/v/ManuHub.Deno)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/ManuHub.Deno)
@@ -81,6 +85,21 @@ Tools\ffprobe.exe
 
 ---
 
+### 🟣 ManuHub.FFplay
+
+Provides the **FFplay executable**, a lightweight media player from the FFmpeg project used for previewing and debugging audio/video streams.
+
+* Useful for testing media playback
+* Built on FFmpeg libraries for decoding and rendering
+
+**Executable path:**
+
+```
+tools\ffplay.exe
+```
+
+---
+
 
 ### 🟠 ManuHub.Deno
 Provides the official **deno.exe** (Windows x64) — the recommended JavaScript runtime for yt-dlp.
@@ -141,7 +160,7 @@ This repository redistributes **unmodified third-party binaries**:
   Licensed under the **Unlicense**
   [https://github.com/yt-dlp/yt-dlp](https://github.com/yt-dlp/yt-dlp)
 
-* **FFmpeg / FFprobe**
+* **FFmpeg / FFprobe** / **FFplay**  
   Licensed under **LGPL or GPL**, depending on build configuration
   [https://ffmpeg.org](https://ffmpeg.org)
 
@@ -167,9 +186,10 @@ Because using yt-dlp in .NET should be as simple as:
 
 ```bash
 dotnet add package ManuHub.Ytdlp
+dotnet add package ManuHub.Deno
 dotnet add package ManuHub.FFmpeg
 dotnet add package ManuHub.FFprobe
-dotnet add package ManuHub.Deno
+dotnet add package ManuHub.FFplay
 ```
 
 No extra downloads. No environment setup. Just works.
