@@ -26,7 +26,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 
 		<!-- Version is auto-updated by GitHub Actions workflow -->
-		<Version>6.2.10</Version>
+		<Version>6.3.12</Version>
 
 		<!-- Binary/content-only package -->
 		<IsPackable>true</IsPackable>

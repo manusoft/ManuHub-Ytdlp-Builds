@@ -38,3 +38,4 @@ In .NET projects, you can reference the ```tools``` directory at runtime or copy
 This package does not modify **FFprobe** in any way.
 **FFprobe** is distributed as a **third-party binary** under its own license.
 
+[Project website](https://ffmpeg.org/)

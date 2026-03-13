@@ -7,6 +7,7 @@
 This package is designed to work seamlessly with **ManuHub.Ytdlp**, **ManuHub.FFmpeg**, **ManuHub.FFprobe**, and libraries such as **Ytdlp.NET** or **YTDLP-Wrapper** — enabling full YouTube support with **zero manual Deno installation**.
 
 ## ✨ Features  
+
 - Official stable **deno.exe** from denoland/deno
 - No global Deno installation required
 - Required for yt-dlp ≥ 2025.11.12 to handle YouTube JS challenges & signature extraction
@@ -33,11 +34,16 @@ In .NET projects, you can reference the ```tools``` directory at runtime or copy
 Most modern yt-dlp wrappers already handle runtime discovery automatically when the binary is in the output directory or PATH.
 
 ## 🔗 Related Packages
+
 - **ManuHub.Ytdlp** – Latest stable yt-dlp executable
 - **ManuHub.FFmpeg** – Latest FFmpeg for post-processing
 - **ManuHub.FFprobe** – Latest FFprobe for media inspection
 
 ## ⚠ Disclaimer
-This package does not modify **Deno** in any way.
+
+This package **does not modify Deno** in any way.
+
 **Deno** is distributed as a **third-party binary** under its own license.
+
+[Project website](https://deno.com/)
 

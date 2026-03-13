@@ -9,6 +9,7 @@ This package is intended for developers who want to use **yt-dlp without requiri
 The yt-dlp binary is included in the package and placed in the ```Tools``` directory.
 
 ## ✨ Features  
+
 - Latest stable **yt-dlp executable**
 - No external yt-dlp installation required
 - Simple integration with .NET projects
@@ -23,6 +24,7 @@ Tools/
 ```
 
 ## 🚀 Usage
+
 yt-dlp can be executed directly from the tools directory or copied to your application’s output folder at build time.
 
 Example command-line usage:
@@ -45,14 +47,17 @@ This package redistributes the official, unmodified yt-dlp executable.
 ## 📜 License & Attribution
 
 ### This package
+
 The packaging logic and metadata are licensed under the **MIT License**.
 
 ### yt-dlp
+
 yt-dlp is licensed under the Unlicense.
 
 [Project website](https://github.com/yt-dlp/yt-dlp/)
 
 ## 🧠 Versioning
+
 The NuGet package version follows the yt-dlp release version.
 
 Packaging-only updates may use an additional revision number when required.
@@ -69,4 +74,5 @@ Because sometimes you just want:
 No installers. No PATH issues. No surprises.
 
 ##  Supported Sites
+
 - [Thousands of sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)
