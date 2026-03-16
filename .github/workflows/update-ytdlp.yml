@@ -4,7 +4,11 @@ on:
   workflow_dispatch:  # Allows manual trigger from GitHub UI
   schedule:
     - cron: "0 3 * * *"  # Every day at 3:00 UTC (~7:00 AM +04 Abu Dhabi time)
-
+    
+permissions:
+  packages: write
+  contents: read
+  
 jobs:
   update-ytdlp:
     runs-on: windows-latest
@@ -156,10 +160,20 @@ jobs:
         shell: pwsh
         run: |
           $nupkg = Get-ChildItem "src/ManuHub.Ytdlp/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
+          
           if ($nupkg) {
+            Write-Output "Found package: $nupkg"
+            # ── Publish to nuget.org ───────────────────────────────────────
             dotnet nuget push "$nupkg" `
               --api-key "${{ secrets.NUGET_KEY }}" `
               --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+
+            # ── Publish to GitHub Packages ─────────────────────────────────
+            # GITHUB_TOKEN is automatically available + has package:write permission
+            dotnet nuget push "$nupkg" `
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
+              --api-key "${{ secrets.GITHUB_TOKEN }}" `
               --skip-duplicate
           } else {
             Write-Output "No .nupkg found – skipping"
