@@ -236,24 +236,19 @@ jobs:
       - name: Push packages
         shell: pwsh
         run: |
-          $packages = Get-ChildItem -Recurse -Filter *.nupkg
-      
-          foreach ($pkg in $packages) {
-            $commonArgs = @{
-              ApiKey   = "${{ secrets.NUGET_KEY }}"
-              Source   = "https://api.nuget.org/v3/index.json"
-              SkipDuplicate = $true
-            }
-      
-            Write-Host "Pushing $($pkg.Name) to nuget.org ..."
-            dotnet nuget push $pkg.FullName @commonArgs
-      
-            $githubArgs = @{
-              ApiKey   = "${{ secrets.GITHUB_TOKEN }}"
-              Source   = "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-              SkipDuplicate = $true
-            }
-      
-            Write-Host "Pushing $($pkg.Name) to GitHub Packages ..."
-            dotnet nuget push $pkg.FullName @githubArgs
+          Get-ChildItem -Recurse -Filter *.nupkg | ForEach-Object {
+            # ── Publish to nuget.org ───────────────────────────────────────
+            dotnet nuget push $_ `
+              --api-key "${{ secrets.NUGET_KEY }}" `
+              --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+
+            # ── Publish to GitHub Packages ─────────────────────────────────
+            # GITHUB_TOKEN is automatically available + has package:write permission
+            dotnet nuget push $_ `
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
+              --api-key "${{ secrets.GITHUB_TOKEN }}" `
+              --skip-duplicate
           }
+
+
