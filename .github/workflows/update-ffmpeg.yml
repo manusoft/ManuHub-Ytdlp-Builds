@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "0 3 * * *"
 
+permissions:
+  packages: write
+  contents: read
+  
 jobs:
   build-packages:
     runs-on: windows-latest
@@ -233,8 +237,16 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem -Recurse -Filter *.nupkg | ForEach-Object {
+            # ── Publish to nuget.org ───────────────────────────────────────
             dotnet nuget push $_ `
               --api-key "${{ secrets.NUGET_KEY }}" `
               --source https://api.nuget.org/v3/index.json `
+              --skip-duplicate
+              
+            # ── Publish to GitHub Packages ─────────────────────────────────
+            # GITHUB_TOKEN is automatically available + has package:write permission
+            dotnet nuget push $_ `
+              --api-key "${{ secrets.GITHUB_TOKEN }}" `
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `             
               --skip-duplicate
           }
