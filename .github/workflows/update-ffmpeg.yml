@@ -97,21 +97,22 @@ jobs:
               <license type="file">LICENSE.txt</license>
               <icon>icon.png</icon>
               <readme>README.md</readme>
-
               <contentFiles>
-                <files include="any/netstandard2.1/tools/$exe"
+                <files include="any/netstandard2.0/tools/$exe"
                        buildAction="None"
                        copyToOutput="true"
                        flatten="false"/>
               </contentFiles>
+              <dependencies>
+                <group targetFramework=".NETStandard2.0" />
+              </dependencies>
             </metadata>
-
             <files>
               <file src="icon.png" target="" />
               <file src="README.md" target="" />
               <file src="LICENSE.txt" target="" />
               <file src="THIRD-PARTY-NOTICES.txt" target="" />
-              <file src="../../tools/$exe" target="contentFiles/any/netstandard2.1/tools/$exe" />
+              <file src="../../tools/$exe" target="contentFiles/any/netstandard2.0/tools/$exe" />
             </files>
 
           </package>
@@ -151,21 +152,22 @@ jobs:
               <license type="file">LICENSE.txt</license>
               <icon>icon.png</icon>
               <readme>README.md</readme>
-
               <contentFiles>
-                <files include="any/netstandard2.1/tools/$exe"
+                <files include="any/netstandard2.0/tools/$exe"
                        buildAction="None"
                        copyToOutput="true"
                        flatten="false"/>
               </contentFiles>
+              <dependencies>
+                <group targetFramework=".NETStandard2.0" />
+              </dependencies>
             </metadata>
-
             <files>
               <file src="icon.png" target="" />
               <file src="README.md" target="" />
               <file src="LICENSE.txt" target="" />
               <file src="THIRD-PARTY-NOTICES.txt" target="" />
-              <file src="../../tools/$exe" target="contentFiles/any/netstandard2.1/tools/$exe" />
+              <file src="../../tools/$exe" target="contentFiles/any/netstandard2.0/tools/$exe" />
             </files>
 
           </package>
@@ -205,21 +207,22 @@ jobs:
               <license type="file">LICENSE.txt</license>
               <icon>icon.png</icon>
               <readme>README.md</readme>
-
               <contentFiles>
-                <files include="any/netstandard2.1/tools/$exe"
+                <files include="any/netstandard2.0/tools/$exe"
                        buildAction="None"
                        copyToOutput="true"
                        flatten="false"/>
               </contentFiles>
+              <dependencies>
+                <group targetFramework=".NETStandard2.0" />
+              </dependencies>
             </metadata>
-
             <files>
               <file src="icon.png" target="" />
               <file src="README.md" target="" />
               <file src="LICENSE.txt" target="" />
               <file src="THIRD-PARTY-NOTICES.txt" target="" />
-              <file src="../../tools/$exe" target="contentFiles/any/netstandard2.1/tools/$exe" />
+              <file src="../../tools/$exe" target="contentFiles/any/netstandard2.0/tools/$exe" />
             </files>
 
           </package>

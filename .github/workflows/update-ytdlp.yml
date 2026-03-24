@@ -99,13 +99,13 @@ jobs:
               <icon>icon.png</icon>
               <readme>README.md</readme>
               <contentFiles>
-                <files include="any/netstandard2.1/tools/yt-dlp.exe"
+                <files include="any/netstandard2.0/tools/yt-dlp.exe"
                      buildAction="None"
                      copyToOutput="true"
                      flatten="false" />
               </contentFiles>      
               <dependencies>
-                <group targetFramework=".NETStandard2.1" />
+                <group targetFramework=".NETStandard2.0" />
               </dependencies>
             </metadata>
             <files>
@@ -113,7 +113,7 @@ jobs:
               <file src="README.md" target="" />
               <file src="LICENSE.txt" target="" />
               <file src="THIRD-PARTY-NOTICES.txt" target="" />
-              <file src="../../tools/yt-dlp.exe" target="contentFiles/any/netstandard2.1/tools/yt-dlp.exe"  />
+              <file src="../../tools/yt-dlp.exe" target="contentFiles/any/netstandard2.0/tools/yt-dlp.exe"  />
             </files>
           </package>
           "@
