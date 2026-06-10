@@ -1,7 +1,7 @@
-name: Update ManuHub.Deno
+name: Release ManuHub.Deno
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:      # Allows manual trigger from GitHub UI
   schedule:
     - cron: "0 3 * * *"   # Daily at 3:00 UTC
 
