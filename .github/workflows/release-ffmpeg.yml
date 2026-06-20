@@ -3,7 +3,7 @@ name: Release ManuHub FFmpeg Toolchain
 on:
   workflow_dispatch:      # Allows manual trigger from GitHub UI
   schedule:
-    - cron: "0 3 * * *"   # Daily at 3:00 UTC
+    - cron: "0 3 1 * *"   
 
 permissions:
   packages: write
@@ -248,10 +248,10 @@ jobs:
 
             # ── Publish to GitHub Packages ─────────────────────────────────
             # GITHUB_TOKEN is automatically available + has package:write permission
-            dotnet nuget push $_ `
-              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
-              --api-key "${{ secrets.GITHUB_TOKEN }}" `
-              --skip-duplicate
+            # dotnet nuget push $_ `
+            #  --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
+            #  --api-key "${{ secrets.GITHUB_TOKEN }}" `
+            #  --skip-duplicate
           }
 
 
