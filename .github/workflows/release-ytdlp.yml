@@ -168,13 +168,6 @@ jobs:
               --api-key "${{ secrets.NUGET_KEY }}" `
               --source https://api.nuget.org/v3/index.json `
               --skip-duplicate
-
-            # ── Publish to GitHub Packages ─────────────────────────────────
-            # GITHUB_TOKEN is automatically available + has package:write permission
-            dotnet nuget push "$nupkg" `
-              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
-              --api-key "${{ secrets.GITHUB_TOKEN }}" `
-              --skip-duplicate
           } else {
             Write-Output "No .nupkg found – skipping"
           }
