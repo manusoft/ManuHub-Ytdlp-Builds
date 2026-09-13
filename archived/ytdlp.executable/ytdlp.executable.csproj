@@ -27,7 +27,7 @@
 	<PackageReadmeFile>README.md</PackageReadmeFile>
 
 	<!-- Version is auto-updated by GitHub Actions workflow -->
-	<Version>2026.7.4</Version>
+	<Version>2026.8.19</Version>
 
 	<!-- Binary-only / content-only package -->
 	<IsPackable>true</IsPackable>
@@ -45,6 +45,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ManuHub.Ytdlp" Version="6.7.4" />
+    <PackageReference Include="ManuHub.Ytdlp" Version="6.8.19" />
   </ItemGroup>
 </Project>
