@@ -46,26 +46,30 @@ jobs:
       # ─────────────────────────────
       # Get Version
       # ─────────────────────────────
-      - name: Get version
+      - name: Get FFmpeg version
         id: version
         shell: pwsh
         run: |
-          $release = Invoke-RestMethod `
-            -Uri "https://api.github.com/repos/BtbN/FFmpeg-Builds/releases/latest" `
-            -Headers @{ "User-Agent" = "GitHub-Actions" }
-
-          $title = $release.name
-
-          if ($title -match '\((\d{4})-(\d{2})-(\d{2})') {
-
-            $year = [int]$Matches[1]
-            $month = [int]$Matches[2]
-            $day = [int]$Matches[3]
-
-            $major = $year - 2020
-            $version = "$major.$month.$day"
-
-            echo "version=$version" >> $env:GITHUB_OUTPUT
+          $line = (& tools/ffmpeg.exe -version 2>&1 | Select-Object -First 1)
+      
+          if ($line -match '^ffmpeg version (N-\d+-g[0-9a-f]+-(\d{8}))') {
+              $upstreamVersion = $Matches[1]
+              $buildDate = $Matches[2]
+      
+              $year  = $buildDate.Substring(0, 4)
+              $month = [int]$buildDate.Substring(4, 2)
+              $day   = [int]$buildDate.Substring(6, 2)
+      
+              $packageVersion = "$year.$month.$day"
+      
+              Write-Host "Upstream FFmpeg: $upstreamVersion"
+              Write-Host "Package version:  $packageVersion"
+      
+              "upstream_version=$upstreamVersion" >> $env:GITHUB_OUTPUT
+              "version=$packageVersion" >> $env:GITHUB_OUTPUT
+          }
+          else {
+              throw "Unable to parse FFmpeg version: $line"
           }
 
       # ─────────────────────────────
