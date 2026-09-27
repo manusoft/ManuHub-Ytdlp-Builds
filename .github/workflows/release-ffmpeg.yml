@@ -56,11 +56,13 @@ jobs:
               $upstreamVersion = $Matches[1]
               $buildDate = $Matches[2]
       
-              $year  = $buildDate.Substring(0, 4)
+              $year  = [int]$buildDate.Substring(0, 4)
               $month = [int]$buildDate.Substring(4, 2)
               $day   = [int]$buildDate.Substring(6, 2)
       
-              $packageVersion = "$year.$month.$day"
+              # FFmpeg package major version is based on year - 2020
+              $major = $year - 2020
+              $packageVersion = "$major.$month.$day"
       
               Write-Host "Upstream FFmpeg: $upstreamVersion"
               Write-Host "Package version:  $packageVersion"
