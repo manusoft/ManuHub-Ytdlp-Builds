@@ -6,8 +6,8 @@ on:
     - cron: "0 3 * * *"   # Daily at 3:00 UTC
 
 permissions:
-  packages: write
   contents: read
+  id-token: write
   
 jobs:
   update-deno:
@@ -153,19 +153,32 @@ jobs:
             Write-Error "No .nupkg found after pack"
             exit 1
           }
+
+      - name: Authenticate with NuGet.org (OIDC)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
           
-      - name: Push Deno package
+      - name: Push Deno package to NuGet.org
         shell: pwsh
         run: |
-          $nupkg = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
-          
-          if ($nupkg) {
-            Write-Output "Found package: $nupkg"            
-            # ── Publish to nuget.org ───────────────────────────────────────
-            dotnet nuget push "$nupkg" `
-              --api-key "${{ secrets.NUGET_KEY }}" `
-              --source https://api.nuget.org/v3/index.json `
-              --skip-duplicate
-          } else {
-            Write-Output "No .nupkg found – skipping"
+          $nupkg = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" |
+            Select-Object -First 1 -ExpandProperty FullName
+
+          if (-Not $nupkg) {
+            Write-Error "No NuGet package found!"
+            exit 1
+          }
+
+          Write-Output "Publishing package: $nupkg"
+
+          dotnet nuget push "$nupkg" `
+            --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" `
+            --source https://api.nuget.org/v3/index.json `
+            --skip-duplicate
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "NuGet package publishing failed!"
+            exit $LASTEXITCODE
           }
