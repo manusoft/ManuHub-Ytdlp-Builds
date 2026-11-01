@@ -39,32 +39,39 @@ jobs:
       # ─────────────────────────────
       # Get Version
       # ─────────────────────────────
-      - name: Convert yt-dlp tag to semver version
+      - name: Convert yt-dlp version to NuGet version
         id: convert-version
         shell: pwsh
         run: |
-          $line = (& tools/yt-dlp.exe --version 2>&1 | Select-Object -First 1)
+          $line = (& tools/yt-dlp.exe --version 2>&1 | Select-Object -First 1).ToString().Trim()
 
-          if ($line -match '^yt-dlp version (N-\d+-g[0-9a-f]+-(\d{8}))') {
-              $upstreamVersion = $Matches[1]
-              $buildDate = $Matches[2]
-      
-              $year  = [int]$buildDate.Substring(0, 4)
-              $month = [int]$buildDate.Substring(4, 2)
-              $day   = [int]$buildDate.Substring(6, 2)
-      
-              # yt-dlp package major version is based on year - 2020
+          if ($LASTEXITCODE -ne 0) {
+              throw "Unable to retrieve yt-dlp version: $line"
+          }
+
+          Write-Output "Upstream yt-dlp version: $line"
+
+          if ($line -match '^(\d{4})\.(\d{1,2})\.(\d{1,2})$') {
+              $year  = [int]$Matches[1]
+              $month = [int]$Matches[2]
+              $day   = [int]$Matches[3]
+
+              # NuGet package version: year - 2020.month.day
               $major = $year - 2020
+
+              if ($major -lt 1 -or $month -lt 1 -or $month -gt 12 -or $day -lt 1 -or $day -gt [DateTime]::DaysInMonth($year, $month)) {
+                  throw "Invalid yt-dlp release date: $line"
+              }
+
               $packageVersion = "$major.$month.$day"
-      
-              Write-Host "Upstream yt-dlp: $upstreamVersion"
-              Write-Host "Package version:  $packageVersion"
-      
-              "upstream_version=$upstreamVersion" >> $env:GITHUB_OUTPUT
+
+              Write-Output "NuGet package version: $packageVersion"
+
+              "upstream_version=$line" >> $env:GITHUB_OUTPUT
               "version=$packageVersion" >> $env:GITHUB_OUTPUT
           }
           else {
-              throw "Unable to parse yt-dlp version: $line"
+              throw "Unexpected yt-dlp version format: $line"
           }
 
       - name: Update .csproj version
