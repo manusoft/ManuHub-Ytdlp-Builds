@@ -18,6 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get latest Deno release tag
+        id: get-tag
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/denoland/deno/releases/latest" -Headers @{ "User-Agent" = "GitHub-Actions" }
+          $tag = $release.tag_name
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+
       - name: Download latest Deno Windows zip
         shell: pwsh
         run: |
@@ -38,45 +46,25 @@ jobs:
           }
           Remove-Item "deno.zip" -Force  # Cleanup
 
-      - name: Get Deno version
+      - name: Set version from tag
         id: set-version
         shell: pwsh
         run: |
-          # Execute Deno and capture its output
-          $output = & tools/deno.exe --version 2>&1
-          $exitCode = $LASTEXITCODE
-
-          if ($exitCode -ne 0) {
-              throw "Unable to retrieve Deno version. Exit code: $exitCode. Output: $output"
-          }
-
-          # Expected: deno 2.9.7 (stable, release, ...)
-          $line = ($output | Select-Object -First 1).ToString().Trim()
-
-          Write-Output "Deno version output: $line"
-
-          if ($line -match '^deno\s+(\d+\.\d+\.\d+)\s+\(') {
-              $version = $Matches[1]
-
-              Write-Output "Deno package version: $version"
-
-              "version=$version" >> $env:GITHUB_OUTPUT
-          }
-          else {
-              throw "Unable to parse Deno version: $line"
-          }
+          $tag = "${{ steps.get-tag.outputs.tag }}"
+          $version = $tag.TrimStart('v')   # v2.6.10 → 2.6.10
+          echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Update .csproj version
         shell: pwsh
         run: |
           $version = "${{ steps.set-version.outputs.version }}"
           $csprojPath = "src/ManuHub.Deno/ManuHub.Deno.csproj"
-
+          
           if (-Not (Test-Path $csprojPath)) {
             Write-Error "csproj not found at $csprojPath"
             exit 1
           }
-
+          
           $content = Get-Content $csprojPath -Raw
           $updated = $content -replace '(?<=<Version>)[^<]+(?=</Version>)', $version
           Set-Content $csprojPath $updated -NoNewline
@@ -178,17 +166,14 @@ jobs:
         run: |
           $pkg = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" |
             Select-Object -First 1 -ExpandProperty FullName
-
           if (-not $pkg) {
             Write-Error "No NuGet package found!"
             exit 1
           }
-
           dotnet nuget push "$pkg" `
             --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" `
             --source "https://api.nuget.org/v3/index.json" `
             --skip-duplicate
-
           if ($LASTEXITCODE -ne 0) {
             Write-Error "NuGet publishing failed!"
             exit $LASTEXITCODE
