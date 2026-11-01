@@ -12,6 +12,7 @@ permissions:
 jobs:
   update-deno:
     runs-on: windows-latest
+    environment: release
 
     steps:
       - name: Checkout repository
