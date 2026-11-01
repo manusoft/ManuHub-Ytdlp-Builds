@@ -6,12 +6,13 @@ on:
     - cron: "0 3 * * *"   # Daily at 3:00 UTC
     
 permissions:
-  packages: write
   contents: read
+  id-token: write
   
 jobs:
   update-ytdlp:
     runs-on: windows-latest
+    environment: release
 
     steps:
       - name: Checkout repository
@@ -156,18 +157,28 @@ jobs:
             exit 1
           }
 
+      - name: Authenticate with NuGet.org (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push yt-dlp package
         shell: pwsh
         run: |
           $nupkg = Get-ChildItem "src/ManuHub.Ytdlp/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
+
+          if (-not $nupkg) {
+            Write-Error "No NuGet package found!"
+            exit 1
+          }
           
-          if ($nupkg) {
-            Write-Output "Found package: $nupkg"
-            # ── Publish to nuget.org ───────────────────────────────────────
-            dotnet nuget push "$nupkg" `
-              --api-key "${{ secrets.NUGET_KEY }}" `
-              --source https://api.nuget.org/v3/index.json `
-              --skip-duplicate
-          } else {
-            Write-Output "No .nupkg found – skipping"
+          dotnet nuget push "$nupkg" `
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" `
+            --source "https://api.nuget.org/v3/index.json" `
+            --skip-duplicate
+            
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "NuGet publishing failed!"
+            exit $LASTEXITCODE
           }

@@ -164,11 +164,20 @@ jobs:
       - name: Push Deno package to NuGet.org
         shell: pwsh
         run: |
-          $pkg = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" | Select-Object -First 1 -ExpandProperty FullName
-          $args = @(
-            $pkg.FullName
-            "--api-key", "${{ steps.login.outputs.NUGET_API_KEY }}"
-            "--source", "https://api.nuget.org/v3/index.json"
-            "--skip-duplicate"
-          )
-          & dotnet nuget push @args
+          $pkg = Get-ChildItem "src/ManuHub.Deno/bin/Release" -Filter "*.nupkg" |
+            Select-Object -First 1 -ExpandProperty FullName
+
+          if (-not $pkg) {
+            Write-Error "No NuGet package found!"
+            exit 1
+          }
+
+          dotnet nuget push "$pkg" `
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" `
+            --source "https://api.nuget.org/v3/index.json" `
+            --skip-duplicate
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "NuGet publishing failed!"
+            exit $LASTEXITCODE
+          }
