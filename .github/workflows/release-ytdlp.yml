@@ -26,6 +26,9 @@ jobs:
           $tag = $release.tag_name
           echo "tag=$tag" >> $env:GITHUB_OUTPUT
 
+      # ─────────────────────────────
+      # Download yt-dlp.exe
+      # ─────────────────────────────
       - name: Download latest yt-dlp.exe
         shell: pwsh
         run: |
@@ -33,27 +36,41 @@ jobs:
           $url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
           Invoke-WebRequest -Uri $url -OutFile "tools/yt-dlp.exe" -UseBasicParsing
 
+      # ─────────────────────────────
+      # Get Version
+      # ─────────────────────────────
       - name: Convert yt-dlp tag to semver version
         id: convert-version
         shell: pwsh
         run: |
-          $tag = "${{ steps.get-tag.outputs.tag }}"
-          if ($tag -match '^(\d{4})\.(\d{2})\.(\d{2})$') {
-            $year  = [int]$Matches[1]
-            $month = [int]$Matches[2]
-            $day   = [int]$Matches[3]
-            $major = $year - 2020
-            $version = "$major.$month.$day"
-            echo "version=$version" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Error "Unexpected tag format: $tag"
-            exit 1
+          $line = (& tools/yt-dlp.exe --version 2>&1 | Select-Object -First 1)
+
+          if ($line -match '^yt-dlp version (N-\d+-g[0-9a-f]+-(\d{8}))') {
+              $upstreamVersion = $Matches[1]
+              $buildDate = $Matches[2]
+      
+              $year  = [int]$buildDate.Substring(0, 4)
+              $month = [int]$buildDate.Substring(4, 2)
+              $day   = [int]$buildDate.Substring(6, 2)
+      
+              # yt-dlp package major version is based on year - 2020
+              $major = $year - 2020
+              $packageVersion = "$major.$month.$day"
+      
+              Write-Host "Upstream yt-dlp: $upstreamVersion"
+              Write-Host "Package version:  $packageVersion"
+      
+              "upstream_version=$upstreamVersion" >> $env:GITHUB_OUTPUT
+              "version=$packageVersion" >> $env:GITHUB_OUTPUT
+          }
+          else {
+              throw "Unable to parse yt-dlp version: $line"
           }
 
       - name: Update .csproj version
         shell: pwsh
         run: |
-          $version = "${{ steps.convert-version.outputs.version }}"
+          $version="${{ steps.version.outputs.version }}"
           $csprojPath = "src/ManuHub.Ytdlp/ManuHub.Ytdlp.csproj"
           
           if (-Not (Test-Path $csprojPath)) {
@@ -161,7 +178,7 @@ jobs:
         uses: NuGet/login@v1
         id: login
         with:
-          user: ${{ secrets.NUGET_USER }}
+          user: ${{ secrets.NUGET_USER1 }}
 
       - name: Push yt-dlp package
         shell: pwsh
