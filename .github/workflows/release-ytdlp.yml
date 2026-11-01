@@ -18,14 +18,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get latest yt-dlp release tag
-        id: get-tag
-        shell: pwsh
-        run: |
-          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest" -Headers @{ "User-Agent" = "GitHub-Actions" }
-          $tag = $release.tag_name
-          echo "tag=$tag" >> $env:GITHUB_OUTPUT
-
       # ─────────────────────────────
       # Download yt-dlp.exe
       # ─────────────────────────────
@@ -43,26 +35,32 @@ jobs:
         id: convert-version
         shell: pwsh
         run: |
-          $line = (& tools/yt-dlp.exe --version 2>&1 | Select-Object -First 1).ToString().Trim()
+          # Execute yt-dlp and capture its output
+          $output = & tools/yt-dlp.exe --version 2>&1
+          $exitCode = $LASTEXITCODE
 
-          if ($LASTEXITCODE -ne 0) {
-              throw "Unable to retrieve yt-dlp version: $line"
+          if ($exitCode -ne 0) {
+              throw "yt-dlp version command failed with exit code $exitCode. Output: $output"
           }
+
+          $line = ($output | Select-Object -First 1).ToString().Trim()
 
           Write-Output "Upstream yt-dlp version: $line"
 
+          # Expected format: 2026.10.29
           if ($line -match '^(\d{4})\.(\d{1,2})\.(\d{1,2})$') {
+
               $year  = [int]$Matches[1]
               $month = [int]$Matches[2]
               $day   = [int]$Matches[3]
 
-              # NuGet package version: year - 2020.month.day
-              $major = $year - 2020
-
-              if ($major -lt 1 -or $month -lt 1 -or $month -gt 12 -or $day -lt 1 -or $day -gt [DateTime]::DaysInMonth($year, $month)) {
+              if ($month -lt 1 -or $month -gt 12 -or
+                  $day -lt 1 -or
+                  $day -gt [DateTime]::DaysInMonth($year, $month)) {
                   throw "Invalid yt-dlp release date: $line"
               }
 
+              $major = $year - 2020
               $packageVersion = "$major.$month.$day"
 
               Write-Output "NuGet package version: $packageVersion"
@@ -77,7 +75,7 @@ jobs:
       - name: Update .csproj version
         shell: pwsh
         run: |
-          $version="${{ steps.version.outputs.version }}"
+          $version = "${{ steps.convert-version.outputs.version }}"
           $csprojPath = "src/ManuHub.Ytdlp/ManuHub.Ytdlp.csproj"
           
           if (-Not (Test-Path $csprojPath)) {
