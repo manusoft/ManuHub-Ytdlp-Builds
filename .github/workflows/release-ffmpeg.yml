@@ -1,9 +1,9 @@
 name: Release ManuHub FFmpeg Toolchain
 
 on:
-  workflow_dispatch:      # Allows manual trigger from GitHub UI
+  workflow_dispatch:
   schedule:
-    - cron: "0 3 * * 0"  # Only on Sunday at 3:00 UTC  
+    - cron: "0 * * * *"  
 
 permissions:
   contents: read
